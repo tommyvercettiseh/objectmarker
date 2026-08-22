@@ -5,20 +5,20 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import javax.inject.Inject;
+import net.runelite.api.Actor;
 import net.runelite.api.Client;
-import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
-import net.runelite.api.GroundObject;
 import net.runelite.api.ItemComposition;
+import net.runelite.api.ItemLayer;
 import net.runelite.api.NPC;
 import net.runelite.api.ObjectComposition;
+import net.runelite.api.Perspective;
 import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
 import net.runelite.api.TileItem;
 import net.runelite.api.TileObject;
-import net.runelite.api.WallObject;
 import net.runelite.api.WorldView;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -92,7 +92,7 @@ public class ObjectMarkerOverlay extends Overlay
 
 				for (TileItem item : tile.getGroundItems())
 				{
-					renderGroundItem(graphics, item);
+					renderGroundItem(graphics, tile, item);
 				}
 			}
 		}
@@ -106,15 +106,13 @@ public class ObjectMarkerOverlay extends Overlay
 		}
 
 		ObjectComposition composition = client.getObjectDefinition(object.getId());
-		if (composition == null)
+		if (composition != null)
 		{
-			return;
+			renderTileObject(graphics, object, composition.getName(), MarkerType.OBJECT);
 		}
-
-		renderTileObject(graphics, object, composition.getName(), MarkerType.OBJECT);
 	}
 
-	private void renderGroundItem(Graphics2D graphics, TileItem item)
+	private void renderGroundItem(Graphics2D graphics, Tile tile, TileItem item)
 	{
 		if (item == null)
 		{
@@ -127,7 +125,28 @@ public class ObjectMarkerOverlay extends Overlay
 			return;
 		}
 
-		renderTileObject(graphics, item, composition.getName(), MarkerType.GROUND_ITEM);
+		for (MarkerDefinition marker : markerStore.getMarkers())
+		{
+			if (marker.getType() != MarkerType.GROUND_ITEM || !marker.matches(composition.getName()))
+			{
+				continue;
+			}
+
+			ItemLayer itemLayer = tile.getItemLayer();
+			int height = itemLayer == null ? 0 : itemLayer.getHeight();
+			Shape shape = Perspective.getCanvasTilePoly(client, tile.getLocalLocation(), height);
+			renderShape(graphics, shape, marker);
+
+			String label = marker.getLabel();
+			if (label != null && !label.trim().isEmpty())
+			{
+				Point location = Perspective.getCanvasTextLocation(client, graphics, tile.getLocalLocation(), label, height + 20);
+				if (location != null)
+				{
+					OverlayUtil.renderTextLocation(graphics, location, label, marker.getColor());
+				}
+			}
+		}
 	}
 
 	private void renderTileObject(Graphics2D graphics, TileObject object, String name, MarkerType type)
@@ -238,7 +257,7 @@ public class ObjectMarkerOverlay extends Overlay
 		}
 	}
 
-	private void renderLabel(Graphics2D graphics, net.runelite.api.Actor actor, MarkerDefinition marker)
+	private void renderLabel(Graphics2D graphics, Actor actor, MarkerDefinition marker)
 	{
 		String label = marker.getLabel();
 		if (label == null || label.trim().isEmpty())
