@@ -2,6 +2,7 @@ package com.hes.objectmarker;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -23,16 +24,21 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 public class ObjectMarkerOverlay extends Overlay
 {
 	private static final Color LABEL_COLOR = Color.CYAN;
+	private static final Color BOX_TEXT_COLOR = Color.BLACK;
 	private static final int TEXT_HEIGHT = 40;
+	private static final int BOX_PADDING_X = 4;
+	private static final int BOX_PADDING_Y = 2;
 
 	private final Client client;
 	private final ConfigManager configManager;
+	private final ObjectMarkerConfig config;
 
 	@Inject
-	public ObjectMarkerOverlay(Client client, ConfigManager configManager)
+	public ObjectMarkerOverlay(Client client, ConfigManager configManager, ObjectMarkerConfig config)
 	{
 		this.client = client;
 		this.configManager = configManager;
+		this.config = config;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_SCENE);
 	}
@@ -103,10 +109,33 @@ public class ObjectMarkerOverlay extends Overlay
 
 		String label = labelFor(composition.getName());
 		Point location = object.getCanvasTextLocation(graphics, label, TEXT_HEIGHT);
-		if (location != null)
+		if (location == null)
+		{
+			return;
+		}
+
+		if (config.labelBoxFill())
+		{
+			renderLabelBox(graphics, location, label);
+			OverlayUtil.renderTextLocation(graphics, location, label, BOX_TEXT_COLOR);
+		}
+		else
 		{
 			OverlayUtil.renderTextLocation(graphics, location, label, LABEL_COLOR);
 		}
+	}
+
+	private void renderLabelBox(Graphics2D graphics, Point location, String label)
+	{
+		FontMetrics metrics = graphics.getFontMetrics();
+		int width = metrics.stringWidth(label) + (BOX_PADDING_X * 2);
+		int height = metrics.getHeight() + (BOX_PADDING_Y * 2);
+		int x = location.getX() - BOX_PADDING_X;
+		int y = location.getY() - metrics.getAscent() - BOX_PADDING_Y;
+		int alpha = Math.round(255f * config.labelBoxOpacity() / 100f);
+
+		graphics.setColor(new Color(0, 255, 255, alpha));
+		graphics.fillRect(x, y, width, height);
 	}
 
 	private Set<String> loadNames()
