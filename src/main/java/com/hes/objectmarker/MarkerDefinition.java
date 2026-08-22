@@ -131,17 +131,15 @@ public class MarkerDefinition
 			return false;
 		}
 
-		if (targetId != null && targetId >= 0)
-		{
-			return id == targetId;
-		}
+		boolean idMatches = targetId != null && targetId >= 0 && id >= 0 && id == targetId;
 
 		if (name == null || match == null)
 		{
-			return false;
+			return idMatches;
 		}
 
 		String trimmed = match.trim();
-		return "*".equals(trimmed) || name.equalsIgnoreCase(trimmed);
+		boolean nameMatches = "*".equals(trimmed) || name.equalsIgnoreCase(trimmed);
+		return idMatches || nameMatches;
 	}
 }
