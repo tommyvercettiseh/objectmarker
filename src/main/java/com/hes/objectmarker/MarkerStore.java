@@ -41,6 +41,29 @@ public class MarkerStore
 		save();
 	}
 
+	public void upsert(MarkerDefinition marker)
+	{
+		for (int i = 0; i < markers.size(); i++)
+		{
+			MarkerDefinition existing = markers.get(i);
+			if (existing.getType() == marker.getType()
+				&& existing.getTargetId() != null
+				&& existing.getTargetId().equals(marker.getTargetId()))
+			{
+				marker.setColor(existing.getColor());
+				marker.setOpacity(existing.getOpacity());
+				marker.setPadding(existing.getPadding());
+				marker.setLabel(existing.getLabel());
+				markers.set(i, marker);
+				save();
+				return;
+			}
+		}
+
+		markers.add(marker);
+		save();
+	}
+
 	public void remove(MarkerDefinition marker)
 	{
 		markers.remove(marker);
