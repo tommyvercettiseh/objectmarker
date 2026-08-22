@@ -24,7 +24,6 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 public class ObjectMarkerOverlay extends Overlay
 {
 	private static final Color LABEL_COLOR = Color.CYAN;
-	private static final Color BOX_TEXT_COLOR = Color.BLACK;
 	private static final int TEXT_HEIGHT = 40;
 	private static final int BOX_PADDING_X = 4;
 	private static final int BOX_PADDING_Y = 2;
@@ -117,12 +116,8 @@ public class ObjectMarkerOverlay extends Overlay
 		if (config.labelBoxFill())
 		{
 			renderLabelBox(graphics, location, label);
-			OverlayUtil.renderTextLocation(graphics, location, label, BOX_TEXT_COLOR);
 		}
-		else
-		{
-			OverlayUtil.renderTextLocation(graphics, location, label, LABEL_COLOR);
-		}
+		OverlayUtil.renderTextLocation(graphics, location, label, LABEL_COLOR);
 	}
 
 	private void renderLabelBox(Graphics2D graphics, Point location, String label)
@@ -134,7 +129,7 @@ public class ObjectMarkerOverlay extends Overlay
 		int y = location.getY() - metrics.getAscent() - BOX_PADDING_Y;
 		int alpha = Math.round(255f * config.labelBoxOpacity() / 100f);
 
-		graphics.setColor(new Color(0, 255, 255, alpha));
+		graphics.setColor(new Color(0, 0, 0, alpha));
 		graphics.fillRect(x, y, width, height);
 	}
 
