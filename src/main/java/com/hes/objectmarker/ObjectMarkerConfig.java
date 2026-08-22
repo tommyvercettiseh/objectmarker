@@ -11,6 +11,16 @@ public interface ObjectMarkerConfig extends Config
 	String GROUP = "objectmarker";
 
 	@ConfigItem(
+		keyName = "labelPosition",
+		name = "Label position",
+		description = "Choose where object labels are shown"
+	)
+	default LabelPosition labelPosition()
+	{
+		return LabelPosition.CENTER;
+	}
+
+	@ConfigItem(
 		keyName = "markOtherPlayers",
 		name = "Mark other players",
 		description = "Highlight all other visible players"
