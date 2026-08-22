@@ -9,6 +9,7 @@ public class MarkerDefinition
 	private String label;
 	private int rgb;
 	private int opacity;
+	private int padding;
 	private boolean enabled;
 
 	public MarkerDefinition()
@@ -17,11 +18,17 @@ public class MarkerDefinition
 
 	public MarkerDefinition(MarkerType type, String match, String label, Color color, int opacity, boolean enabled)
 	{
+		this(type, match, label, color, opacity, 0, enabled);
+	}
+
+	public MarkerDefinition(MarkerType type, String match, String label, Color color, int opacity, int padding, boolean enabled)
+	{
 		this.type = type;
 		this.match = match;
 		this.label = label;
 		this.rgb = color.getRGB();
 		this.opacity = opacity;
+		this.padding = Math.max(0, Math.min(100, padding));
 		this.enabled = enabled;
 	}
 
@@ -73,6 +80,16 @@ public class MarkerDefinition
 	public void setOpacity(int opacity)
 	{
 		this.opacity = Math.max(0, Math.min(100, opacity));
+	}
+
+	public int getPadding()
+	{
+		return padding;
+	}
+
+	public void setPadding(int padding)
+	{
+		this.padding = Math.max(0, Math.min(100, padding));
 	}
 
 	public boolean isEnabled()
