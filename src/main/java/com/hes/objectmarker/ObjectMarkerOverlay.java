@@ -1,9 +1,11 @@
 package com.hes.objectmarker;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Shape;
+import java.awt.geom.Area;
 import javax.inject.Inject;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
@@ -230,16 +232,39 @@ public class ObjectMarkerOverlay extends Overlay
 			return;
 		}
 
+		Shape renderShape = insetShape(shape, marker.getPadding());
+		if (renderShape == null)
+		{
+			return;
+		}
+
 		Color color = marker.getColor();
 		int alpha = Math.round(255f * marker.getOpacity() / 100f);
 		if (alpha > 0)
 		{
 			graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha));
-			graphics.fill(shape);
+			graphics.fill(renderShape);
 		}
 
 		graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 255));
-		graphics.draw(shape);
+		graphics.draw(renderShape);
+	}
+
+	private Shape insetShape(Shape shape, int padding)
+	{
+		if (padding <= 0)
+		{
+			return shape;
+		}
+
+		Area inner = new Area(shape);
+		Shape borderBand = new BasicStroke(
+			padding * 2f,
+			BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND
+		).createStrokedShape(shape);
+		inner.subtract(new Area(borderBand));
+		return inner.isEmpty() ? null : inner;
 	}
 
 	private void renderLabel(Graphics2D graphics, TileObject object, MarkerDefinition marker)
