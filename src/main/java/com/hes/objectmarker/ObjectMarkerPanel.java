@@ -64,7 +64,7 @@ public class ObjectMarkerPanel extends PluginPanel
 		card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 		card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		card.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
-		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 270));
+		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 290));
 
 		JComboBox<MarkerType> type = new JComboBox<>(MarkerType.values());
 		type.setSelectedItem(marker.getType());
@@ -129,6 +129,7 @@ public class ObjectMarkerPanel extends PluginPanel
 
 		card.add(row("Type", type));
 		card.add(row("Match", match));
+		card.add(row("Exact ID", new JLabel(marker.getTargetId() == null ? "name match" : String.valueOf(marker.getTargetId()))));
 		card.add(row("Label", label));
 		card.add(row("Colour", color));
 		card.add(new JLabel("Opacity"));
