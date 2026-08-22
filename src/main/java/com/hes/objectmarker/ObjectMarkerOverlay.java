@@ -129,7 +129,7 @@ public class ObjectMarkerOverlay extends Overlay
 
 		for (MarkerDefinition marker : markerStore.getMarkers())
 		{
-			if (marker.getType() != MarkerType.GROUND_ITEM || !marker.matches(composition.getName()))
+			if (marker.getType() != MarkerType.GROUND_ITEM || !marker.matches(composition.getName(), item.getId()))
 			{
 				continue;
 			}
@@ -155,7 +155,7 @@ public class ObjectMarkerOverlay extends Overlay
 	{
 		for (MarkerDefinition marker : markerStore.getMarkers())
 		{
-			if (marker.getType() != type || !marker.matches(name))
+			if (marker.getType() != type || !marker.matches(name, object.getId()))
 			{
 				continue;
 			}
@@ -181,7 +181,7 @@ public class ObjectMarkerOverlay extends Overlay
 
 			for (MarkerDefinition marker : markerStore.getMarkers())
 			{
-				if (marker.getType() != MarkerType.NPC || !marker.matches(npc.getName()))
+				if (marker.getType() != MarkerType.NPC || !marker.matches(npc.getName(), npc.getId()))
 				{
 					continue;
 				}
@@ -209,7 +209,7 @@ public class ObjectMarkerOverlay extends Overlay
 
 			for (MarkerDefinition marker : markerStore.getMarkers())
 			{
-				if (marker.getType() != MarkerType.PLAYER || !marker.matches(player.getName()))
+				if (marker.getType() != MarkerType.PLAYER || !marker.matches(player.getName(), -1))
 				{
 					continue;
 				}
