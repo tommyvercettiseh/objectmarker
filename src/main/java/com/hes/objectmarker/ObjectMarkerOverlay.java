@@ -2,7 +2,10 @@ package com.hes.objectmarker;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.inject.Inject;
@@ -23,15 +26,18 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 public class ObjectMarkerOverlay extends Overlay
 {
 	private static final Color CYAN = Color.CYAN;
+	private static final int LABEL_GAP = 6;
 
 	private final Client client;
 	private final ConfigManager configManager;
+	private final ObjectMarkerConfig config;
 
 	@Inject
-	public ObjectMarkerOverlay(Client client, ConfigManager configManager)
+	public ObjectMarkerOverlay(Client client, ConfigManager configManager, ObjectMarkerConfig config)
 	{
 		this.client = client;
 		this.configManager = configManager;
+		this.config = config;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_SCENE);
 	}
@@ -102,11 +108,46 @@ public class ObjectMarkerOverlay extends Overlay
 		}
 
 		String label = labelFor(composition.getName());
-		Point location = object.getCanvasTextLocation(graphics, label, 40);
+		Point location = labelLocation(graphics, object, label);
 		if (location != null)
 		{
 			OverlayUtil.renderTextLocation(graphics, location, label, CYAN);
 		}
+	}
+
+	private Point labelLocation(Graphics2D graphics, TileObject object, String label)
+	{
+		Shape shape = object.getClickbox();
+		if (shape == null)
+		{
+			shape = object.getCanvasTilePoly();
+		}
+
+		if (shape == null)
+		{
+			return object.getCanvasTextLocation(graphics, label, 40);
+		}
+
+		Rectangle bounds = shape.getBounds();
+		FontMetrics metrics = graphics.getFontMetrics();
+		int x = bounds.x + (bounds.width - metrics.stringWidth(label)) / 2;
+		int y;
+
+		switch (config.labelPosition())
+		{
+			case ABOVE:
+				y = bounds.y - LABEL_GAP;
+				break;
+			case BELOW:
+				y = bounds.y + bounds.height + metrics.getAscent() + LABEL_GAP;
+				break;
+			case CENTER:
+			default:
+				y = bounds.y + (bounds.height + metrics.getAscent() - metrics.getDescent()) / 2;
+				break;
+		}
+
+		return new Point(x, y);
 	}
 
 	private Set<String> loadNames()
