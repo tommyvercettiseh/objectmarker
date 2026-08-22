@@ -13,7 +13,9 @@ import javax.swing.JColorChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -62,7 +64,7 @@ public class ObjectMarkerPanel extends PluginPanel
 		card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 		card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		card.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
-		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 230));
+		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 270));
 
 		JComboBox<MarkerType> type = new JComboBox<>(MarkerType.values());
 		type.setSelectedItem(marker.getType());
@@ -104,6 +106,13 @@ public class ObjectMarkerPanel extends PluginPanel
 			}
 		});
 
+		JSpinner padding = new JSpinner(new SpinnerNumberModel(marker.getPadding(), 0, 100, 1));
+		padding.addChangeListener(e ->
+		{
+			marker.setPadding((Integer) padding.getValue());
+			markerStore.save();
+		});
+
 		JCheckBox enabled = new JCheckBox("Enabled", marker.isEnabled());
 		enabled.addActionListener(e ->
 		{
@@ -124,6 +133,7 @@ public class ObjectMarkerPanel extends PluginPanel
 		card.add(row("Colour", color));
 		card.add(new JLabel("Opacity"));
 		card.add(opacity);
+		card.add(row("Padding (px)", padding));
 		card.add(enabled);
 		card.add(delete);
 		return card;
