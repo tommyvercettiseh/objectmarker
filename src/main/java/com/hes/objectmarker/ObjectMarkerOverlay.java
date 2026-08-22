@@ -20,7 +20,7 @@ public class ObjectMarkerOverlay extends Overlay
 {
 	private static final Color CYAN = Color.CYAN;
 	private static final String TARGET_NAME = "Fire";
-	private static final String LABEL = "FIRE";
+	private static final String LABEL = "CAMPFIRE";
 
 	private final Client client;
 
