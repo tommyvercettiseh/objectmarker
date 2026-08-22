@@ -7,6 +7,7 @@ public class MarkerDefinition
 	private MarkerType type;
 	private String match;
 	private String label;
+	private Integer targetId;
 	private int rgb;
 	private int opacity;
 	private int padding;
@@ -18,16 +19,22 @@ public class MarkerDefinition
 
 	public MarkerDefinition(MarkerType type, String match, String label, Color color, int opacity, boolean enabled)
 	{
-		this(type, match, label, color, opacity, 0, enabled);
+		this(type, match, label, null, color, opacity, 0, enabled);
 	}
 
 	public MarkerDefinition(MarkerType type, String match, String label, Color color, int opacity, int padding, boolean enabled)
 	{
+		this(type, match, label, null, color, opacity, padding, enabled);
+	}
+
+	public MarkerDefinition(MarkerType type, String match, String label, Integer targetId, Color color, int opacity, int padding, boolean enabled)
+	{
 		this.type = type;
 		this.match = match;
 		this.label = label;
+		this.targetId = targetId;
 		this.rgb = color.getRGB();
-		this.opacity = opacity;
+		this.opacity = Math.max(0, Math.min(100, opacity));
 		this.padding = Math.max(0, Math.min(100, padding));
 		this.enabled = enabled;
 	}
@@ -60,6 +67,16 @@ public class MarkerDefinition
 	public void setLabel(String label)
 	{
 		this.label = label;
+	}
+
+	public Integer getTargetId()
+	{
+		return targetId;
+	}
+
+	public void setTargetId(Integer targetId)
+	{
+		this.targetId = targetId;
 	}
 
 	public Color getColor()
@@ -104,7 +121,22 @@ public class MarkerDefinition
 
 	public boolean matches(String name)
 	{
-		if (!enabled || name == null || match == null)
+		return matches(name, -1);
+	}
+
+	public boolean matches(String name, int id)
+	{
+		if (!enabled)
+		{
+			return false;
+		}
+
+		if (targetId != null && targetId >= 0)
+		{
+			return id == targetId;
+		}
+
+		if (name == null || match == null)
 		{
 			return false;
 		}
