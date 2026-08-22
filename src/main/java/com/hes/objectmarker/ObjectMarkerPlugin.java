@@ -9,6 +9,9 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
+import net.runelite.api.DecorativeObject;
+import net.runelite.api.GameObject;
+import net.runelite.api.GroundObject;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
@@ -16,6 +19,11 @@ import net.runelite.api.MenuEntry;
 import net.runelite.api.NPC;
 import net.runelite.api.ObjectComposition;
 import net.runelite.api.Player;
+import net.runelite.api.Scene;
+import net.runelite.api.Tile;
+import net.runelite.api.TileObject;
+import net.runelite.api.WallObject;
+import net.runelite.api.WorldView;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.client.config.ConfigManager;
@@ -108,13 +116,24 @@ public class ObjectMarkerPlugin extends Plugin
 		MenuEntry entry = event.getMenuEntry();
 		MenuAction action = entry.getType();
 
-		if (isObjectAction(action))
+		if (action == MenuAction.EXAMINE_OBJECT)
 		{
-			int id = entry.getIdentifier();
-			ObjectComposition composition = client.getObjectDefinition(id);
+			WorldView worldView = client.getWorldView(entry.getWorldViewId());
+			if (worldView == null)
+			{
+				return;
+			}
+
+			TileObject object = findTileObject(worldView, entry.getParam0(), entry.getParam1(), entry.getIdentifier());
+			if (object == null)
+			{
+				return;
+			}
+
+			ObjectComposition composition = client.getObjectDefinition(object.getId());
 			if (composition != null)
 			{
-				addMarkMenu(MarkerType.OBJECT, id, composition.getName());
+				addMarkMenu(MarkerType.OBJECT, object.getId(), composition.getName());
 			}
 			return;
 		}
@@ -144,9 +163,84 @@ public class ObjectMarkerPlugin extends Plugin
 		}
 	}
 
+	private TileObject findTileObject(WorldView worldView, int x, int y, int id)
+	{
+		int plane = worldView.getPlane();
+		Scene scene = worldView.getScene();
+		Tile[][][] tiles = scene.getTiles();
+
+		if (plane < 0 || plane >= tiles.length
+			|| x < 0 || x >= tiles[plane].length
+			|| y < 0 || y >= tiles[plane][x].length)
+		{
+			return null;
+		}
+
+		Tile tile = tiles[plane][x][y];
+		if (tile == null)
+		{
+			return null;
+		}
+
+		WallObject wallObject = tile.getWallObject();
+		if (objectIdEquals(wallObject, id))
+		{
+			return wallObject;
+		}
+
+		DecorativeObject decorativeObject = tile.getDecorativeObject();
+		if (objectIdEquals(decorativeObject, id))
+		{
+			return decorativeObject;
+		}
+
+		GroundObject groundObject = tile.getGroundObject();
+		if (objectIdEquals(groundObject, id))
+		{
+			return groundObject;
+		}
+
+		for (GameObject gameObject : tile.getGameObjects())
+		{
+			if (objectIdEquals(gameObject, id))
+			{
+				return gameObject;
+			}
+		}
+
+		return null;
+	}
+
+	private boolean objectIdEquals(TileObject object, int id)
+	{
+		if (object == null)
+		{
+			return false;
+		}
+
+		if (object.getId() == id)
+		{
+			return true;
+		}
+
+		ObjectComposition composition = client.getObjectDefinition(object.getId());
+		if (composition != null && composition.getImpostorIds() != null)
+		{
+			for (int impostorId : composition.getImpostorIds())
+			{
+				if (impostorId == id)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	private void addMarkMenu(MarkerType type, Integer id, String name)
 	{
-		if (name == null || name.trim().isEmpty())
+		if (name == null || name.trim().isEmpty() || "null".equalsIgnoreCase(name))
 		{
 			return;
 		}
@@ -163,7 +257,7 @@ public class ObjectMarkerPlugin extends Plugin
 			.setType(MenuAction.RUNELITE)
 			.onClick(e ->
 			{
-				markerStore.add(new MarkerDefinition(
+				markerStore.upsert(new MarkerDefinition(
 					type,
 					name,
 					"",
@@ -178,16 +272,6 @@ public class ObjectMarkerPlugin extends Plugin
 					SwingUtilities.invokeLater(panel::rebuild);
 				}
 			});
-	}
-
-	private boolean isObjectAction(MenuAction action)
-	{
-		return action == MenuAction.GAME_OBJECT_FIRST_OPTION
-			|| action == MenuAction.GAME_OBJECT_SECOND_OPTION
-			|| action == MenuAction.GAME_OBJECT_THIRD_OPTION
-			|| action == MenuAction.GAME_OBJECT_FOURTH_OPTION
-			|| action == MenuAction.GAME_OBJECT_FIFTH_OPTION
-			|| action == MenuAction.EXAMINE_OBJECT;
 	}
 
 	private boolean isGroundItemAction(MenuAction action)
