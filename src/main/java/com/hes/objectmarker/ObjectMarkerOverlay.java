@@ -2,10 +2,7 @@ package com.hes.objectmarker;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.inject.Inject;
@@ -25,19 +22,17 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 
 public class ObjectMarkerOverlay extends Overlay
 {
-	private static final Color CYAN = Color.CYAN;
-	private static final int LABEL_GAP = 6;
+	private static final Color LABEL_COLOR = Color.CYAN;
+	private static final int TEXT_HEIGHT = 40;
 
 	private final Client client;
 	private final ConfigManager configManager;
-	private final ObjectMarkerConfig config;
 
 	@Inject
-	public ObjectMarkerOverlay(Client client, ConfigManager configManager, ObjectMarkerConfig config)
+	public ObjectMarkerOverlay(Client client, ConfigManager configManager)
 	{
 		this.client = client;
 		this.configManager = configManager;
-		this.config = config;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_SCENE);
 	}
@@ -60,7 +55,6 @@ public class ObjectMarkerOverlay extends Overlay
 		Scene scene = worldView.getScene();
 		Tile[][][] tiles = scene.getTiles();
 		int plane = worldView.getPlane();
-
 		if (plane < 0 || plane >= tiles.length)
 		{
 			return null;
@@ -108,61 +102,32 @@ public class ObjectMarkerOverlay extends Overlay
 		}
 
 		String label = labelFor(composition.getName());
-		Point location = labelLocation(graphics, object, label);
+		Point location = object.getCanvasTextLocation(graphics, label, TEXT_HEIGHT);
 		if (location != null)
 		{
-			OverlayUtil.renderTextLocation(graphics, location, label, CYAN);
+			OverlayUtil.renderTextLocation(graphics, location, label, LABEL_COLOR);
 		}
-	}
-
-	private Point labelLocation(Graphics2D graphics, TileObject object, String label)
-	{
-		Shape shape = object.getClickbox();
-		if (shape == null)
-		{
-			shape = object.getCanvasTilePoly();
-		}
-
-		if (shape == null)
-		{
-			return object.getCanvasTextLocation(graphics, label, 40);
-		}
-
-		Rectangle bounds = shape.getBounds();
-		FontMetrics metrics = graphics.getFontMetrics();
-		int x = bounds.x + (bounds.width - metrics.stringWidth(label)) / 2;
-		int y;
-
-		switch (config.labelPosition())
-		{
-			case ABOVE:
-				y = bounds.y - LABEL_GAP;
-				break;
-			case BELOW:
-				y = bounds.y + bounds.height + metrics.getAscent() + LABEL_GAP;
-				break;
-			case CENTER:
-			default:
-				y = bounds.y + (bounds.height + metrics.getAscent() - metrics.getDescent()) / 2;
-				break;
-		}
-
-		return new Point(x, y);
 	}
 
 	private Set<String> loadNames()
 	{
 		Set<String> names = new LinkedHashSet<>();
-		String saved = configManager.getConfiguration(ObjectMarkerPlugin.CONFIG_GROUP, ObjectMarkerPlugin.TAGGED_NAMES_KEY);
-		if (saved != null)
+		String saved = configManager.getConfiguration(
+			ObjectMarkerPlugin.CONFIG_GROUP,
+			ObjectMarkerPlugin.TAGGED_NAMES_KEY
+		);
+
+		if (saved == null)
 		{
-			for (String line : saved.split("\\R"))
+			return names;
+		}
+
+		for (String line : saved.split("\\R"))
+		{
+			String name = line.trim();
+			if (!name.isEmpty())
 			{
-				String trimmed = line.trim();
-				if (!trimmed.isEmpty())
-				{
-					names.add(trimmed);
-				}
+				names.add(name);
 			}
 		}
 		return names;
@@ -175,9 +140,9 @@ public class ObjectMarkerOverlay extends Overlay
 			return false;
 		}
 
-		for (String value : names)
+		for (String taggedName : names)
 		{
-			if (value.equalsIgnoreCase(name))
+			if (taggedName.equalsIgnoreCase(name))
 			{
 				return true;
 			}
