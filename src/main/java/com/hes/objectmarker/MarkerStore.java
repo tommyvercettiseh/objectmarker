@@ -46,9 +46,14 @@ public class MarkerStore
 		for (int i = 0; i < markers.size(); i++)
 		{
 			MarkerDefinition existing = markers.get(i);
-			if (existing.getType() == marker.getType()
-				&& existing.getTargetId() != null
-				&& existing.getTargetId().equals(marker.getTargetId()))
+			boolean sameId = existing.getTargetId() != null
+				&& marker.getTargetId() != null
+				&& existing.getTargetId().equals(marker.getTargetId());
+			boolean sameName = existing.getMatch() != null
+				&& marker.getMatch() != null
+				&& existing.getMatch().equalsIgnoreCase(marker.getMatch());
+
+			if (existing.getType() == marker.getType() && (sameId || sameName))
 			{
 				marker.setColor(existing.getColor());
 				marker.setOpacity(existing.getOpacity());
