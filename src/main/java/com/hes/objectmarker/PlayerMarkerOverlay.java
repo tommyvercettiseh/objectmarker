@@ -14,8 +14,6 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 
 public class PlayerMarkerOverlay extends Overlay
 {
-	private static final int FILL_ALPHA = 90;
-
 	private final Client client;
 	private final ObjectMarkerConfig config;
 
@@ -38,7 +36,8 @@ public class PlayerMarkerOverlay extends Overlay
 
 		Player localPlayer = client.getLocalPlayer();
 		Color color = config.otherPlayerColor();
-		Color fill = new Color(color.getRed(), color.getGreen(), color.getBlue(), FILL_ALPHA);
+		int alpha = Math.round(255f * config.otherPlayerOpacity() / 100f);
+		Color fill = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
 
 		for (Player player : client.getPlayers())
 		{
